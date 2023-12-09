@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import LabelEncoder
 
 def plt_property(title, xlabel, ylabel):
     plt.title(title)
@@ -29,3 +30,13 @@ cols_count = len(df.axes[1])
 
 # print(df.tail)
 # print(df.head)
+
+# Seeing how redshift impacts class outcome
+x = df[['redshift']]
+y = df['class']
+
+# Converting strings to numerical 
+label_encoder = LabelEncoder()
+# y_numeric = label_encoder.fit_transform(y)
+label_encoder.fit_transform(y)
+
