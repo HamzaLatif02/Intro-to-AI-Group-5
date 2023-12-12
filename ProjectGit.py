@@ -2,6 +2,8 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import LabelEncoder
+from imblearn.over_sampling import SMOTE
+from collections import Counter
 
 def plt_property(title, xlabel, ylabel):
     plt.title(title)
@@ -40,3 +42,10 @@ label_encoder = LabelEncoder()
 # y_numeric = label_encoder.fit_transform(y)
 label_encoder.fit_transform(y)
 
+#Using the SMOTE function and resampling the data
+smote = SMOTE(random_state=42)
+print('Original data %s' % Counter(y))
+x, y = smote.fit_resample(x, y)
+print('Resampled data %s' % Counter(y))
+x_resampled, y_resampled = smote.fit_resample(x, y)
+# Calculate the percentage of each class based on the resa
