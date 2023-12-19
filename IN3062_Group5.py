@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import scipy.stats as stats
+import math
 from sklearn.preprocessing import LabelEncoder
 from imblearn.over_sampling import SMOTE
 from collections import Counter
@@ -97,11 +98,14 @@ y = df['class']
 
 # Splitting the dataset into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Calculate size of training dataset
+traindata_size = X_train.size + y_train.size
+
 
 #K-Nearest Neighbour model
-def knn_model(nfeatures):
+def knn_model(nneighbours):
     # Using K-Nearest Neighbors as a naive model
-    knn = KNeighborsClassifier(n_neighbors=nfeatures)
+    knn = KNeighborsClassifier(n_neighbors=nneighbours)
     knn.fit(X_train, y_train)
 
     # Predictions
@@ -110,7 +114,8 @@ def knn_model(nfeatures):
     # Evaluation
     accuracy = accuracy_score(y_test, y_pred)
     class_report = classification_report(y_test, y_pred)
-
+    
+    print('Number of neighbours:', nneighbours)
     print('Baseline Model Accuracy:', accuracy)
     print('Classification Report:\n', class_report)
     print()
@@ -120,4 +125,5 @@ knn_model(3)
 knn_model(5)
 knn_model(10)
 knn_model(100)
+knn_model(math.isqrt(traindata_size))
 knn_model(1000)
