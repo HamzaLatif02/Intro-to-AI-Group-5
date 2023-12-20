@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import scipy.stats as stats
 import math
+import tensorflow as tf
 from sklearn.preprocessing import LabelEncoder
 from imblearn.over_sampling import SMOTE
 from collections import Counter
@@ -11,6 +12,9 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import classification_report, accuracy_score
+from tensorflow import keras
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
 
 def plt_property(title, xlabel, ylabel):
     plt.title(title)
@@ -82,18 +86,18 @@ print()
 
 # Plotting the scatter plot between 'redshift' and 'class'
 plt.figure(figsize=(10, 6))
-sns.scatterplot(data=df, x='class', y='redshift', palette='viridis')
+sns.scatterplot(data=df, x='class', y='scaled_redshift', palette='viridis')
 
 plt.title('Scatter Plot of Redshift vs Class')
 plt.xlabel('Class')
-plt.ylabel('Redshift')
+plt.ylabel('Scaled_Redshift')
 plt.show()
 
 print()
 
 # Code to Build a Naive Model and Evaluate It
 # Selecting 'redshift' as the feature and 'class' as the target
-X = df[['redshift']]
+X = df[['scaled_redshift']]
 y = df['class']
 
 # Splitting the dataset into training and testing sets
@@ -120,10 +124,42 @@ def knn_model(nneighbours):
     print('Classification Report:\n', class_report)
     print()
 
-#Run the model using different values for number of neighbours to see diferrence in results
+# Run the model using different values for number of neighbours to see diferrence in results
 knn_model(3)
 knn_model(5)
 knn_model(10)
 knn_model(100)
 knn_model(math.isqrt(traindata_size))
 knn_model(1000)
+
+
+# Code to build a Neural Network model and evaluate it
+# Select all relevant features as the features and 'class' as target
+X = df.drop(['class', 'obj_ID', 'run_ID', 'rerun_ID','MJD', 'redshift'], axis=1)
+
+# Assign each class (Galaxy, Star, QSO) to an integer value, the one hot encode. 
+label_encoder = LabelEncoder()
+df['class'] = label_encoder.fit_transform(df['class'])
+y = keras.utils.to_categorical(df['class'])
+
+# Splitting the dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Neural Network model
+def nn_model(n_hidden_units, n_epochs):
+    model = Sequential()
+    model.add(Dense(n_hidden_units, activation='relu', input_shape=(X_train.shape[1],)))
+    model.add(Dense(y.shape[1],activation='softmax'))
+    model.compile(optimizer='adam', loss='mean_squared_error', metrics=['accuracy'])
+    model.fit(X_train, y_train,verbose=1, epochs=n_epochs, batch_size=32)
+    loss, accuracy = model.evaluate(X_test, y_test)
+    print(f'Number of hidden units: {n_hidden_units}, Number of epochs: {n_epochs}')
+    print(f'Test accuracy: {accuracy}')
+    print()
+
+# Run the model using different parameters to see difference in results
+nn_model(64, 10)
+nn_model(1024, 10)
+
+
+
