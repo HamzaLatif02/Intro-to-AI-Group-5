@@ -132,7 +132,6 @@ knn_model(100)
 knn_model(math.isqrt(traindata_size))
 knn_model(1000)
 
-
 # Code to build a Neural Network model and evaluate it
 # Select all relevant features as the features and 'class' as target
 X = df.drop(['class', 'obj_ID', 'run_ID', 'rerun_ID','MJD', 'redshift'], axis=1)
@@ -146,20 +145,38 @@ y = keras.utils.to_categorical(df['class'])
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Neural Network model
-def nn_model(n_hidden_units, n_epochs):
+def nn_model(n_hidden_layers, hidden_activation, n_hidden_units, n_epochs):
+    print(f'Number of hidden layers: {n_hidden_layers}, Hidden layers activation type: {hidden_activation}')
+    print(f'Number of hidden units: {n_hidden_units}, Number of epochs: {n_epochs}')
+    
+    i = 1
     model = Sequential()
-    model.add(Dense(n_hidden_units, activation='relu', input_shape=(X_train.shape[1],)))
+    model.add(Dense(n_hidden_units, activation=hidden_activation, input_shape=(X_train.shape[1],)))
+    # Add hidden layers
+    while i < n_hidden_layers:
+        model.add(Dense(n_hidden_units, activation=hidden_activation))
+        i+=1
+    
     model.add(Dense(y.shape[1],activation='softmax'))
     model.compile(optimizer='adam', loss='mean_squared_error', metrics=['accuracy'])
-    model.fit(X_train, y_train,verbose=1, epochs=n_epochs, batch_size=32)
+    model.fit(X_train, y_train,verbose=2, epochs=n_epochs, batch_size=32)
     loss, accuracy = model.evaluate(X_test, y_test)
-    print(f'Number of hidden units: {n_hidden_units}, Number of epochs: {n_epochs}')
     print(f'Test accuracy: {accuracy}')
     print()
 
 # Run the model using different parameters to see difference in results
-nn_model(64, 10)
-nn_model(1024, 10)
+nn_model(1,'relu',64,10)
+nn_model(1,'relu',64,200)
+nn_model(1,'relu',1024,200)
+nn_model(2,'relu',1024,200)
+
+# For the last model, transform the data so it is normally distributed
+sc = StandardScaler()
+sc.fit(X_train)
+X_train= sc.transform(X_train)
+X_test = sc.transform(X_test)
+
+nn_model(2, 'relu', 64, 200)
 
 
 
