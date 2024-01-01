@@ -9,9 +9,10 @@ from sklearn.preprocessing import LabelEncoder
 from imblearn.over_sampling import SMOTE
 from collections import Counter
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score, KFold
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import classification_report, accuracy_score
+from sklearn.tree import DecisionTreeClassifier
 from tensorflow import keras
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
@@ -27,8 +28,8 @@ df = pd.read_csv("/Users/apple/Desktop/uni/year3/IntroToAI/cw/star_classificatio
 # Amount of features + samples
 row_count = len(df.axes[0])
 cols_count = len(df.axes[1])
-# print(f'The DataFrame has {row_count} rows.')
-# print(f'The DataFrame has {cols_count} columns.')
+print(f'The DataFrame has {row_count} rows.')
+print(f'The DataFrame has {cols_count} columns.')
 
 #renaming the columns to more understandable heading
 df = df.rename(columns = {'g': 'Green Light'})
@@ -41,13 +42,13 @@ df = df.rename(columns = {'alpha': 'Ascension Angle'})
 #1.Checking for missing and null values
 
 # Drop any missing values
-# print(df.isnull().any())
-# dropna = df[' '].dropna()
-# df[' '] = df[' '].fillna(dropna)
-# print(df.isnull().any())
+print(df.isnull().any())
+dropna = df[' '].dropna()
+df[' '] = df[' '].fillna(dropna)
+print(df.isnull().any())
 
-# print(df.tail)
-# print(df.head)
+print(df.tail)
+print(df.head)
 
 # Seeing how redshift impacts class outcome
 x = df[['redshift']]
@@ -179,4 +180,62 @@ X_test = sc.transform(X_test)
 nn_model(2, 'relu', 64, 200)
 
 
+# Function to build and evaluate Decision Tree model
+def decision_tree_model(max_depth):
+    # Instantiate a Decision Tree Classifier with specified max_depth
+    dt = DecisionTreeClassifier(max_depth=max_depth, random_state=42)
+    
+    # Train the Decision Tree model on the training data
+    dt.fit(X_train, y_train)
 
+    # Predict using the trained model on the test data
+    y_pred = dt.predict(X_test)
+
+    # Calculate accuracy and generate a classification report
+    accuracy = accuracy_score(y_test, y_pred)
+    class_report = classification_report(y_test, y_pred, zero_division=0)
+
+    # Display information about the model and its performance
+    print(f'Max Depth of Tree: {max_depth}')
+    print(f'Decision Tree Accuracy: {accuracy}')
+    print(f'Classification Report:\n{class_report}')
+    print()
+
+# Function to perform k-fold cross-validation on a given model
+def k_fold_cross_validation(model, X, y, k):
+    # Create k-fold cross-validation iterator
+    cv = KFold(n_splits=k, shuffle=True, random_state=42)
+    
+    # Perform k-fold cross-validation on the model and data
+    scores = cross_val_score(model, X, y, cv=cv, scoring='accuracy')
+
+    # Display results of k-fold cross-validation
+    print(f'K-Fold Cross-Validation with {k} folds:')
+    print(f'Using Decision Tree Model with max depth {model.max_depth}')
+    print(f'Accuracy Scores: {scores}')
+    print(f'Mean Accuracy: {scores.mean()}')
+    print()
+
+# Run the Decision Tree model with different max_depth values
+decision_tree_model(3)  # Evaluate the Decision Tree with max_depth = 3
+decision_tree_model(5)  # Evaluate the Decision Tree with max_depth = 5
+decision_tree_model(10)  # Evaluate the Decision Tree with max_depth = 10
+decision_tree_model(15)  # Evaluate the Decision Tree with max_depth = 15 (additional)
+decision_tree_model(20)  # Evaluate the Decision Tree with max_depth = 20 (additional)
+decision_tree_model(25)  # Evaluate the Decision Tree with max_depth = 25 (additional)
+
+# Example using k-fold cross-validation with Decision Tree
+dt_5 = DecisionTreeClassifier(max_depth=5, random_state=42)  # Instantiate Decision Tree with max_depth = 5
+dt_10 = DecisionTreeClassifier(max_depth=10, random_state=42)  # Instantiate Decision Tree with max_depth = 10
+dt_15 = DecisionTreeClassifier(max_depth=15, random_state=42)  # Instantiate Decision Tree with max_depth = 15 (additional)
+dt_20 = DecisionTreeClassifier(max_depth=20, random_state=42)  # Instantiate Decision Tree with max_depth = 20 (additional)
+
+k_fold_cross_validation(dt_5, X, y, k=5)  # Perform k-fold cross-validation (k=5) using the Decision Tree model with max_depth = 5
+k_fold_cross_validation(dt_10, X, y, k=5)  # Perform k-fold cross-validation (k=5) using the Decision Tree model with max_depth = 10
+k_fold_cross_validation(dt_15, X, y, k=5)  # Perform k-fold cross-validation (k=5) using the Decision Tree model with max_depth = 15 (additional)
+k_fold_cross_validation(dt_20, X, y, k=5)  # Perform k-fold cross-validation (k=5) using the Decision Tree model with max_depth = 20 (additional)
+
+k_fold_cross_validation(dt_5, X, y, k=10)  # Perform k-fold cross-validation (k=10) using the Decision Tree model with max_depth = 5
+k_fold_cross_validation(dt_10, X, y, k=10)  # Perform k-fold cross-validation (k=10) using the Decision Tree model with max_depth = 10
+k_fold_cross_validation(dt_15, X, y, k=10)  # Perform k-fold cross-validation (k=10) using the Decision Tree model with max_depth = 15 (additional)
+k_fold_cross_validation(dt_20, X, y, k=10)  # Perform k-fold cross-validation (k=10) using the Decision Tree model with max_depth = 20 (additional)
