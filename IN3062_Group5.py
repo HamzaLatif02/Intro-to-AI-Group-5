@@ -1,3 +1,7 @@
+# IN3062 Intro to Artificial Intelligence - Coursework
+# Stellar Classification: Classification of stars based on their spectral characteristics.
+# Authors: Ali Miftah, Alysha Mcglashan, Hamza Latif, Sebastian Chan
+
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -11,11 +15,12 @@ from collections import Counter
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split, cross_val_score, KFold
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import classification_report, accuracy_score
+from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
 from sklearn.tree import DecisionTreeClassifier
 from tensorflow import keras
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
+from sklearn.svm import SVC
 
 def plt_property(title, xlabel, ylabel):
     plt.title(title)
@@ -23,7 +28,8 @@ def plt_property(title, xlabel, ylabel):
     plt.ylabel(ylabel)
 
 # Absolute or relative path to the folder containing the file.
-df = pd.read_csv("/Users/apple/Desktop/uni/year3/IntroToAI/cw/star_classification.csv", na_values=['NA', '?'])
+# Change path to own position of dataset file
+df = pd.read_csv("/Users/apple/Desktop/uni/year3/term1/IntroToAI/cw/star_classification.csv", na_values=['NA', '?'])
 
 # Amount of features + samples
 row_count = len(df.axes[0])
@@ -42,13 +48,13 @@ df = df.rename(columns = {'alpha': 'Ascension Angle'})
 #1.Checking for missing and null values
 
 # Drop any missing values
-print(df.isnull().any())
-dropna = df[' '].dropna()
-df[' '] = df[' '].fillna(dropna)
-print(df.isnull().any())
+#print(df.isnull().any())
+#dropna = df[' '].dropna()
+#df[' '] = df[' '].fillna(dropna)
+#print(df.isnull().any())
 
-print(df.tail)
-print(df.head)
+#print(df.tail)
+#print(df.head)
 
 # Seeing how redshift impacts class outcome
 x = df[['redshift']]
@@ -220,22 +226,57 @@ def k_fold_cross_validation(model, X, y, k):
 decision_tree_model(3)  # Evaluate the Decision Tree with max_depth = 3
 decision_tree_model(5)  # Evaluate the Decision Tree with max_depth = 5
 decision_tree_model(10)  # Evaluate the Decision Tree with max_depth = 10
-decision_tree_model(15)  # Evaluate the Decision Tree with max_depth = 15 (additional)
-decision_tree_model(20)  # Evaluate the Decision Tree with max_depth = 20 (additional)
-decision_tree_model(25)  # Evaluate the Decision Tree with max_depth = 25 (additional)
+decision_tree_model(15)  # Evaluate the Decision Tree with max_depth = 15
+decision_tree_model(20)  # Evaluate the Decision Tree with max_depth = 20
+decision_tree_model(25)  # Evaluate the Decision Tree with max_depth = 25 
 
 # Example using k-fold cross-validation with Decision Tree
 dt_5 = DecisionTreeClassifier(max_depth=5, random_state=42)  # Instantiate Decision Tree with max_depth = 5
 dt_10 = DecisionTreeClassifier(max_depth=10, random_state=42)  # Instantiate Decision Tree with max_depth = 10
-dt_15 = DecisionTreeClassifier(max_depth=15, random_state=42)  # Instantiate Decision Tree with max_depth = 15 (additional)
-dt_20 = DecisionTreeClassifier(max_depth=20, random_state=42)  # Instantiate Decision Tree with max_depth = 20 (additional)
+dt_15 = DecisionTreeClassifier(max_depth=15, random_state=42)  # Instantiate Decision Tree with max_depth = 15 
+dt_20 = DecisionTreeClassifier(max_depth=20, random_state=42)  # Instantiate Decision Tree with max_depth = 20 
 
 k_fold_cross_validation(dt_5, X, y, k=5)  # Perform k-fold cross-validation (k=5) using the Decision Tree model with max_depth = 5
 k_fold_cross_validation(dt_10, X, y, k=5)  # Perform k-fold cross-validation (k=5) using the Decision Tree model with max_depth = 10
-k_fold_cross_validation(dt_15, X, y, k=5)  # Perform k-fold cross-validation (k=5) using the Decision Tree model with max_depth = 15 (additional)
-k_fold_cross_validation(dt_20, X, y, k=5)  # Perform k-fold cross-validation (k=5) using the Decision Tree model with max_depth = 20 (additional)
+k_fold_cross_validation(dt_15, X, y, k=5)  # Perform k-fold cross-validation (k=5) using the Decision Tree model with max_depth = 15
+k_fold_cross_validation(dt_20, X, y, k=5)  # Perform k-fold cross-validation (k=5) using the Decision Tree model with max_depth = 20 
 
 k_fold_cross_validation(dt_5, X, y, k=10)  # Perform k-fold cross-validation (k=10) using the Decision Tree model with max_depth = 5
 k_fold_cross_validation(dt_10, X, y, k=10)  # Perform k-fold cross-validation (k=10) using the Decision Tree model with max_depth = 10
-k_fold_cross_validation(dt_15, X, y, k=10)  # Perform k-fold cross-validation (k=10) using the Decision Tree model with max_depth = 15 (additional)
-k_fold_cross_validation(dt_20, X, y, k=10)  # Perform k-fold cross-validation (k=10) using the Decision Tree model with max_depth = 20 (additional)
+k_fold_cross_validation(dt_15, X, y, k=10)  # Perform k-fold cross-validation (k=10) using the Decision Tree model with max_depth = 15
+k_fold_cross_validation(dt_20, X, y, k=10)  # Perform k-fold cross-validation (k=10) using the Decision Tree model with max_depth = 20
+
+X = df[['scaled_redshift']]
+y = df['class']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# SVM model
+def svm_model(kernel='linear', C=1.0):
+    svm = SVC(kernel=kernel, C=C, random_state=42)
+    svm.fit(X_train, y_train)
+    y_pred = svm.predict(X_test)
+    
+    # Calculate accuracy
+    accuracy = accuracy_score(y_test, y_pred)
+    print(f'SVM Model (Kernel: {kernel}, C: {C})')
+    print(f'SVM Accuracy: {accuracy}')
+
+    # Calculate and print the confusion matrix
+    cm = confusion_matrix(y_test, y_pred)
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(cm, annot=True, fmt='g', cmap='Blues')
+    plt.title(f'Confusion Matrix for SVM (Kernel: {kernel}, C: {C})')
+    plt.xlabel('Predicted Label')
+    plt.ylabel('True Label')
+    plt.show()
+
+    #Print classification report
+    class_report = classification_report(y_test, y_pred, zero_division=0)
+    print(f'Classification Report:\n{class_report}')
+    print()
+
+# Run SVM model using different kernel types and penalty scores.
+svm_model(kernel ='linear', C=1.0)
+svm_model(kernel='linear', C=0.001)
+svm_model(kernel='rbf', C=0.01)
+svm_model(kernel='poly', C=10)
